@@ -101,13 +101,14 @@ class Game extends React.Component {
             history: [{
                 squares: Array(9).fill(null),
             }],
+            stepNumber: 0,
             xIsNext: true,
         };
     }
 
     // Handle click is on the top game level instead of the squares level
     handleClick(i) {
-        const history = this.state.history;
+        const history = this.state.history.slice(0, this.state.stepNumber + 1);
         // history[0] returns default value
         const current = history[history.length - 1];
         // return shallow copy - don't want to directly edit squares yet
@@ -115,19 +116,27 @@ class Game extends React.Component {
         if (calculateWinner(squares) || squares[i]) {
             return;
         }
-        squares[i] = this.state.xIsNext ? 'O' : 'X';
+        squares[i] = this.state.xIsNext ? 'X' : 'O';
         this.setState({
             // Use concat instead of push because it doesn't mutate the original array
             history: history.concat([{
                 squares: squares
             }]),
+            stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
+        });
+    }
+
+    jumpTo(step) {
+        this.setState({
+            stepNumber: step,
+            xIsNext: (step % 2) === 0,
         });
     }
 
     render() {
         const history = this.state.history;
-        const current = history[history.length - 1];
+        const current = history[this.state.stepNumber];
         const winner = calculateWinner(current.squares);
 
         const moves = history.map((step, move) => {
@@ -135,7 +144,7 @@ class Game extends React.Component {
                 'Go to move #' + move :
                 'Go to game start';
             return (
-                <li>
+                <li key={move}>
                     <button onClick={() => this.jumpTo(move)}>{desc}</button>
                 </li>
             );
